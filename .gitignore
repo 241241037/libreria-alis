@@ -1,0 +1,23 @@
+# Dependencias de Composer (no se suben al repo)
+vendor/
+composer.lock
+
+# Configuración local con credenciales reales (cada dev tiene la suya)
+config/database.php
+
+# Archivos de sesión PHP que XAMPP genera localmente
+/tmp/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs de Apache/PHP
+*.log
+
+# Editor
+.vscode/
+.idea/
+
+# El script de configuración inicial NO debe estar en producción
+setup_admin.php

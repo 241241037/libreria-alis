@@ -1,0 +1,14 @@
+# Railway usa nixpacks para detectar el stack automáticamente.
+# Este archivo le dice: PHP 8.2 con Apache.
+
+[phases.setup]
+nixPkgs = ["php82", "php82Packages.composer", "apacheHttpd"]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "apache2-foreground"
+
+[variables]
+APACHE_DOCUMENT_ROOT = "/app"

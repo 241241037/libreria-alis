@@ -1,0 +1,93 @@
+name: CI – Librería ALIS
+
+# Se dispara en cada push y pull request a main o dev
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint-and-test:
+    name: PHP Lint + Unit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ""
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: libreria_alis
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      # 1. Descarga el código del repositorio
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Instala PHP 8.2 con las extensiones necesarias
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo, pdo_mysql, mbstring
+          tools: phpunit
+
+      # 3. Revisa la sintaxis de TODOS los archivos PHP
+      - name: PHP Syntax Lint
+        run: find . -name "*.php" -not -path "./vendor/*" | xargs -I{} php -l {}
+
+      # 4. Importa el schema de la BD en el servidor MySQL del runner
+      - name: Import DB schema
+        run: mysql -h 127.0.0.1 -u root libreria_alis < sql/schema.sql
+
+      # 5. Ajusta credenciales para el entorno de CI (root sin contraseña)
+      - name: Patch DB config for CI
+        run: |
+          sed -i "s/define('DB_PASS', '.*')/define('DB_PASS', '')/" config/database.php
+
+      # 6. Instala PHPUnit vía Composer
+      - name: Install Composer dependencies
+        run: |
+          composer require --dev phpunit/phpunit:^10 --no-interaction --quiet
+
+      # 7. Ejecuta las pruebas unitarias (sin BD)
+      - name: Run Unit Tests (LangTest + AuthTest)
+        run: vendor/bin/phpunit tests/LangTest.php tests/AuthTest.php --colors=always
+
+      # 8. Ejecuta las pruebas de integración (con BD)
+      - name: Run Integration Tests
+        run: vendor/bin/phpunit tests/LibrosIntegrationTest.php --colors=always
+
+  security-headers:
+    name: Security Headers Check
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Verifica que los endpoints usen ob_start() para limpiar output antes de JSON
+      - name: Check ob_start in API files
+        run: |
+          for f in api/libros.php api/search.php api/reservas.php api/google_books.php; do
+            if grep -q "ob_start" "$f"; then
+              echo "✔ $f tiene ob_start()"
+            else
+              echo "✘ $f FALTA ob_start()" && exit 1
+            fi
+          done
+
+      # Verifica que NO haya display_errors = On en los endpoints
+      - name: Check display_errors is off in API
+        run: |
+          for f in api/*.php; do
+            if grep -q "display_errors.*1" "$f"; then
+              echo "✘ $f tiene display_errors activo" && exit 1
+            fi
+          done
+          echo "✔ display_errors está desactivado en todos los endpoints"

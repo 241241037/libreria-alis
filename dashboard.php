@@ -13,6 +13,9 @@ $admin = isAdmin();
 
 $pdo = getConnection();
 $libros = $pdo->query('SELECT * FROM libro ORDER BY titulo ASC')->fetchAll();
+$generos = $pdo->query("SELECT DISTINCT genero FROM libro WHERE genero IS NOT NULL AND genero <> '' ORDER BY genero")->fetchAll(PDO::FETCH_COLUMN);
+$bookMap = [];
+foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($lang) ?>">
@@ -43,6 +46,13 @@ $libros = $pdo->query('SELECT * FROM libro ORDER BY titulo ASC')->fetchAll();
     <input type="text" id="searchInput" autocomplete="off" placeholder="<?= htmlspecialchars(t('search_placeholder', $t)) ?>">
     <div class="autocomplete-list" id="autocompleteList"></div>
   </div>
+
+  <select id="genreFilter" class="lang-select" aria-label="<?= htmlspecialchars(t('genre', $t)) ?>">
+    <option value=""><?= htmlspecialchars(t('genre_all', $t)) ?></option>
+    <?php foreach ($generos as $g): ?>
+      <option value="<?= htmlspecialchars($g) ?>"><?= htmlspecialchars($g) ?></option>
+    <?php endforeach; ?>
+  </select>
 
   <div class="header-spacer"></div>
 
