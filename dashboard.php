@@ -343,8 +343,14 @@ document.addEventListener('click', function (e) {
   if (!e.target.closest('.search-wrap')) closeDropdown();
 });
 
-const performSearch = ALIS.debounce(function (q) {
-  fetch('api/libros.php?q=' + encodeURIComponent(q))
+const genreFilter = document.getElementById('genreFilter');
+
+function doSearch() {
+  const q = searchInput.value.trim();
+  const g = genreFilter ? genreFilter.value : '';
+  let url = 'api/libros.php?q=' + encodeURIComponent(q);
+  if (g) url += '&genero=' + encodeURIComponent(g);
+  fetch(url)
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -354,7 +360,13 @@ const performSearch = ALIS.debounce(function (q) {
       console.error('Error al buscar libros (api/libros.php):', err);
       ALIS.showToast('No se pudo cargar el catálogo. Revisa la consola (F12).');
     });
-}, 200);
+}
+
+const performSearch = ALIS.debounce(doSearch, 200);
+
+if (genreFilter) {
+  genreFilter.addEventListener('change', doSearch);
+}
 
 function renderGrid(libros) {
   if (!Array.isArray(libros)) {

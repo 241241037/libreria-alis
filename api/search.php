@@ -37,14 +37,19 @@ if ($q === '') {
 $pdo = getConnection();
 $like = '%' . $q . '%';
 
+$likeStart = $q . '%';
+$likeAny   = '%' . $q . '%';
+
 $stmt = $pdo->prepare(
     'SELECT id, titulo, autor, genero, isbn
      FROM libro
      WHERE titulo LIKE :q1 OR autor LIKE :q2 OR genero LIKE :q3 OR isbn LIKE :q4
-     ORDER BY titulo ASC
+     ORDER BY
+       CASE WHEN titulo LIKE :q5 THEN 0 ELSE 1 END,
+       titulo ASC
      LIMIT 8'
 );
-$stmt->execute(['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like]);
+$stmt->execute(['q1' => $likeStart, 'q2' => $likeAny, 'q3' => $likeAny, 'q4' => $likeAny, 'q5' => $likeStart]);
 $rows = $stmt->fetchAll();
 
 $suggestions = array_map(function ($r) {

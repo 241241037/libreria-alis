@@ -49,17 +49,31 @@ function validateBook(array $d): ?string {
 switch ($method) {
     case 'GET':
         $q = trim($_GET['q'] ?? '');
+        $genero = trim($_GET['genero'] ?? '');
+
+        // Búsqueda: coincidencia desde el INICIO de la palabra (titulo LIKE 'El%')
+        // Para autor/género/ISBN se mantiene búsqueda parcial con %q%
+        $conditions = [];
+        $params = [];
+
         if ($q !== '') {
-            $like = '%' . $q . '%';
-            $stmt = $pdo->prepare(
-                'SELECT * FROM libro
-                 WHERE titulo LIKE :q1 OR autor LIKE :q2 OR genero LIKE :q3 OR isbn LIKE :q4
-                 ORDER BY titulo ASC'
-            );
-            $stmt->execute(['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like]);
-        } else {
-            $stmt = $pdo->query('SELECT * FROM libro ORDER BY titulo ASC');
+            $likeStart = $q . '%';   // desde el inicio (título)
+            $likeAny   = '%' . $q . '%'; // en cualquier posición (resto)
+            $conditions[] = '(titulo LIKE :q1 OR autor LIKE :q2 OR genero LIKE :q3 OR isbn LIKE :q4)';
+            $params['q1'] = $likeStart;
+            $params['q2'] = $likeAny;
+            $params['q3'] = $likeAny;
+            $params['q4'] = $likeAny;
         }
+
+        if ($genero !== '') {
+            $conditions[] = 'genero = :genero';
+            $params['genero'] = $genero;
+        }
+
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $stmt = $pdo->prepare("SELECT * FROM libro $where ORDER BY titulo ASC");
+        $stmt->execute($params);
         respond($stmt->fetchAll());
         break;
 

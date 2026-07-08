@@ -51,6 +51,7 @@ return [
     'new_customer_question' => 'Neuer Kunde?',
     'create_account' => 'Konto erstellen',
     'already_have_account' => 'Bereits ein Konto?',
+    'genre_all' => 'Alle Genres',
     'login_link' => 'Anmelden',
     'full_name' => 'Vollständiger Name',
     'confirm_password' => 'Passwort bestätigen',
