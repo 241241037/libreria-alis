@@ -14,6 +14,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/lang.php';
+require_once __DIR__ . '/../includes/book_titles.php';
 require_once __DIR__ . '/../config/database.php';
 
 startAppSession();
@@ -74,7 +76,17 @@ switch ($method) {
         $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
         $stmt = $pdo->prepare("SELECT * FROM libro $where ORDER BY titulo ASC");
         $stmt->execute($params);
-        respond($stmt->fetchAll());
+        $rows = $stmt->fetchAll();
+
+        // titulo_i18n = título traducido para mostrar. Se agrega aparte y no
+        // reemplaza 'titulo' (que sigue siendo el original, usado al editar).
+        $lang = currentLang();
+        foreach ($rows as &$row) {
+            $row['titulo_i18n'] = translateBookTitle($row['titulo'], $lang);
+        }
+        unset($row);
+
+        respond($rows);
         break;
 
     case 'POST':

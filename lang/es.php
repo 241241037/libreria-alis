@@ -52,6 +52,10 @@ return [
     'create_account' => 'Crear cuenta',
     'already_have_account' => '¿Ya tienes cuenta?',
     'genre_all' => 'Todos los géneros',
+    'view_mode' => 'Vista',
+    'view_grid' => 'Cuadrícula',
+    'view_list' => 'Lista',
+    'view_compact' => 'Cuadrícula pequeña',
     'login_link' => 'Inicia sesión',
     'full_name' => 'Nombre completo',
     'confirm_password' => 'Confirmar contraseña',
@@ -61,3 +65,5 @@ return [
     'register_error_match' => 'Las contraseñas no coinciden.',
     'register_error_exists' => 'Ya existe una cuenta con ese correo.',
 ];
+// Este archivo ya tiene el array $lang retornado arriba.
+// El mapa de géneros se agrega en includes/genres.php

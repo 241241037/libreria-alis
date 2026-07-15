@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/lang.php';
+require_once __DIR__ . '/includes/genres.php';
+require_once __DIR__ . '/includes/book_titles.php';
 require_once __DIR__ . '/config/database.php';
 
 startAppSession();
@@ -50,13 +52,13 @@ foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
   <select id="genreFilter" class="lang-select" aria-label="<?= htmlspecialchars(t('genre', $t)) ?>">
     <option value=""><?= htmlspecialchars(t('genre_all', $t)) ?></option>
     <?php foreach ($generos as $g): ?>
-      <option value="<?= htmlspecialchars($g) ?>"><?= htmlspecialchars($g) ?></option>
+      <option value="<?= htmlspecialchars($g) ?>"><?= htmlspecialchars(translateGenre($g, $lang)) ?></option>
     <?php endforeach; ?>
   </select>
 
   <div class="header-spacer"></div>
 
-  <div class="header-controls">
+  <div class="header-controls-primary">
     <div class="accent-picker" title="<?= htmlspecialchars(t('accent_color', $t)) ?>">
       <span class="accent-dot" data-accent="indigo" onclick="ALIS.setAccent('indigo')"></span>
       <span class="accent-dot" data-accent="emerald" onclick="ALIS.setAccent('emerald')"></span>
@@ -65,8 +67,22 @@ foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
       <span class="accent-dot" data-accent="slate" onclick="ALIS.setAccent('slate')"></span>
     </div>
 
-    <button class="icon-btn" id="themeToggle" title="<?= htmlspecialchars(t('theme', $t)) ?>" onclick="ALIS.toggleTheme()"></button>
+    <div class="view-toggle" role="group" title="<?= htmlspecialchars(t('view_mode', $t)) ?>">
+      <button type="button" class="icon-btn" data-view="grid" title="<?= htmlspecialchars(t('view_grid', $t)) ?>" onclick="setViewMode('grid')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </button>
+      <button type="button" class="icon-btn" data-view="list" title="<?= htmlspecialchars(t('view_list', $t)) ?>" onclick="setViewMode('list')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      </button>
+      <button type="button" class="icon-btn" data-view="compact" title="<?= htmlspecialchars(t('view_compact', $t)) ?>" onclick="setViewMode('compact')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9.5" y="2" width="5" height="5" rx="1"/><rect x="17" y="2" width="5" height="5" rx="1"/><rect x="2" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="17" y="9.5" width="5" height="5" rx="1"/><rect x="2" y="17" width="5" height="5" rx="1"/><rect x="9.5" y="17" width="5" height="5" rx="1"/><rect x="17" y="17" width="5" height="5" rx="1"/></svg>
+      </button>
+    </div>
 
+    <button class="icon-btn" id="themeToggle" title="<?= htmlspecialchars(t('theme', $t)) ?>" onclick="ALIS.toggleTheme()"></button>
+  </div>
+
+  <div class="header-controls">
     <?php if (!$admin): ?>
     <button class="icon-btn cart-btn" id="cartBtn" title="<?= htmlspecialchars(t('cart', $t)) ?>" onclick="openCart()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
@@ -105,7 +121,7 @@ foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
           <?php endif; ?>
         </div>
         <div class="book-info">
-          <div class="book-title"><?= htmlspecialchars($libro['titulo']) ?></div>
+          <div class="book-title"><?= htmlspecialchars(translateBookTitle($libro['titulo'], $lang)) ?></div>
           <div class="book-author"><?= htmlspecialchars($libro['autor']) ?></div>
           <div class="book-meta">
             <span class="book-price">$<?= number_format((float) $libro['precio'], 2) ?></span>
@@ -117,11 +133,11 @@ foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
         <?php if ($admin): ?>
           <div class="book-actions">
             <button class="btn btn-ghost btn-sm" onclick='openBookModal(<?= json_encode($libro) ?>)'><?= htmlspecialchars(t('edit', $t)) ?></button>
-            <button class="btn btn-danger btn-sm" onclick="deleteBook(<?= (int) $libro['id'] ?>, '<?= htmlspecialchars(addslashes($libro['titulo'])) ?>')"><?= htmlspecialchars(t('delete', $t)) ?></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteBook(<?= (int) $libro['id'] ?>, '<?= htmlspecialchars(addslashes(translateBookTitle($libro['titulo'], $lang))) ?>')"><?= htmlspecialchars(t('delete', $t)) ?></button>
           </div>
         <?php else: ?>
           <div class="book-actions">
-            <button class="btn btn-primary btn-sm" <?= $libro['stock'] <= 0 ? 'disabled' : '' ?> onclick="addToCart(<?= (int) $libro['id'] ?>, '<?= htmlspecialchars(addslashes($libro['titulo'])) ?>', <?= (int) $libro['stock'] ?>)"><?= htmlspecialchars(t('reserve', $t)) ?></button>
+            <button class="btn btn-primary btn-sm" <?= $libro['stock'] <= 0 ? 'disabled' : '' ?> onclick="addToCart(<?= (int) $libro['id'] ?>, '<?= htmlspecialchars(addslashes(translateBookTitle($libro['titulo'], $lang))) ?>', <?= (int) $libro['stock'] ?>)"><?= htmlspecialchars(t('reserve', $t)) ?></button>
           </div>
         <?php endif; ?>
       </article>
@@ -199,6 +215,26 @@ foreach ($libros as $l) { $bookMap[$l['id']] = $l; }
 <script src="assets/js/app.js"></script>
 <script>
 ALIS.initTheme();
+
+/* ---------- Modo de vista del catálogo (cuadrícula / lista / compacta) ---------- */
+const VIEW_MODE_KEY = 'alis_view_mode';
+
+function setViewMode(mode) {
+  const gridEl = document.getElementById('bookGrid');
+  if (gridEl) {
+    gridEl.classList.remove('view-list', 'view-compact');
+    if (mode !== 'grid') gridEl.classList.add('view-' + mode);
+  }
+  document.querySelectorAll('.view-toggle .icon-btn').forEach(function (btn) {
+    btn.classList.toggle('active', btn.dataset.view === mode);
+  });
+  localStorage.setItem(VIEW_MODE_KEY, mode);
+}
+
+function initViewMode() {
+  setViewMode(localStorage.getItem(VIEW_MODE_KEY) || 'grid');
+}
+initViewMode();
 
 document.getElementById('langSelect').addEventListener('change', function () {
   window.location.href = '?lang=' + this.value;
@@ -388,21 +424,22 @@ function renderGrid(libros) {
     return;
   }
   gridEl.innerHTML = libros.map(b => {
+    const tituloMostrado = b.titulo_i18n || b.titulo;
     const cover = b.imagen_url
-      ? `<img src="${b.imagen_url}" alt="${escapeHtml(b.titulo)}" loading="lazy" onerror="this.parentElement.innerHTML=bookIconSvg()">`
+      ? `<img src="${b.imagen_url}" alt="${escapeHtml(tituloMostrado)}" loading="lazy" onerror="this.parentElement.innerHTML=bookIconSvg()">`
       : bookIconSvg();
     const stockClass = b.stock > 0 ? 'in' : 'out';
     const stockLabel = b.stock > 0 ? `${i18n.in_stock} · ${b.stock}` : i18n.out_of_stock;
     const actions = isAdminUser
       ? `<div class="book-actions">
            <button class="btn btn-ghost btn-sm" onclick='openBookModal(${JSON.stringify(b)})'>${i18n.edit}</button>
-           <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id}, '${escapeHtml(b.titulo).replace(/'/g, "\\'")}')">${i18n.delete}</button>
+           <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id}, '${escapeHtml(tituloMostrado).replace(/'/g, "\\'")}')">${i18n.delete}</button>
          </div>`
-      : `<div class="book-actions"><button class="btn btn-primary btn-sm" ${b.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${b.id}, '${escapeHtml(b.titulo).replace(/'/g, "\\'")}', ${b.stock})">${i18n.reserve}</button></div>`;
+      : `<div class="book-actions"><button class="btn btn-primary btn-sm" ${b.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${b.id}, '${escapeHtml(tituloMostrado).replace(/'/g, "\\'")}', ${b.stock})">${i18n.reserve}</button></div>`;
     return `<article class="book-card" data-id="${b.id}">
       <div class="book-cover">${cover}</div>
       <div class="book-info">
-        <div class="book-title">${escapeHtml(b.titulo)}</div>
+        <div class="book-title">${escapeHtml(tituloMostrado)}</div>
         <div class="book-author">${escapeHtml(b.autor || '')}</div>
         <div class="book-meta">
           <span class="book-price">$${Number(b.precio).toFixed(2)}</span>

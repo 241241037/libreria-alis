@@ -207,7 +207,7 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   padding: 14px 28px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -223,8 +223,8 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
 .search-wrap {
   position: relative;
   flex: 1;
-  min-width: 220px;
-  max-width: 520px;
+  min-width: 180px;
+  max-width: 340px;
 }
 
 .search-wrap input {
@@ -271,10 +271,17 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
 
 .header-spacer { flex: 1; }
 
-.header-controls {
+.header-controls-primary {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .icon-btn {
@@ -350,6 +357,26 @@ select.lang-select {
   font-size: 13px;
 }
 
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.view-toggle .icon-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 16px;
+}
+.view-toggle .icon-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .user-chip {
   font-size: 13px;
   color: var(--text-muted);
@@ -397,6 +424,48 @@ select.lang-select {
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 20px;
 }
+
+/* Vista: cuadrícula pequeña — mismas tarjetas, más columnas y más chicas */
+.book-grid.view-compact {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.book-grid.view-compact .book-info { padding: 8px 10px 10px; gap: 2px; }
+.book-grid.view-compact .book-title { font-size: 12.5px; }
+.book-grid.view-compact .book-author { font-size: 11px; }
+.book-grid.view-compact .book-actions { padding: 0 10px 10px; }
+
+/* Vista: lista — una columna, tarjetas horizontales */
+.book-grid.view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.book-grid.view-list .book-card {
+  flex-direction: row;
+  align-items: stretch;
+}
+.book-grid.view-list .book-cover {
+  aspect-ratio: auto;
+  width: 64px;
+  flex: 0 0 64px;
+}
+.book-grid.view-list .book-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  padding: 10px 14px;
+}
+.book-grid.view-list .book-title { flex: 1; }
+.book-grid.view-list .book-author { flex: 1; }
+.book-grid.view-list .book-meta { margin-top: 0; flex: 0 0 auto; gap: 12px; }
+.book-grid.view-list .book-actions {
+  padding: 10px 14px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+.book-grid.view-list .book-actions .btn { flex: none; }
 
 .book-card {
   background: var(--bg-elevated);
